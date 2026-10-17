@@ -43,6 +43,11 @@ window.addEventListener('message', (event) => {
                     (containers[i].initContainer ? containers[i].name + ' (init)' : containers[i].name));
                 select.appendChild(option);
             }
+            // Restart logs for the selected container; stop the current stream first so two do not interleave.
+            select.addEventListener('vsc-change', (_event) => {
+                stopLog();
+                onRun();
+            });
             containersPanel.appendChild(select);
         }
         case 'content': {
@@ -298,6 +303,8 @@ function startLog() {
     resetFilter();
     clear();
     isFollowRun = isFollow();
+    // Keep the newest lines in view until the user scrolls up.
+    isToBottom = true;
     const options = {
         container: getContainer(),
         follow: isFollowRun,
@@ -550,12 +557,110 @@ function beautifyLines(contentLines) {
         if (!value) {
             continue;
         }
-        value = value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        value = highlightWords(value);
+        const json = highlightJsonLine(value);
+        if (json !== undefined) {
+            value = json;
+        } else {
+            value = value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            value = highlightWords(value);
+        }
         value = /\n$/.test(value) ? value : `${value}\n`;
         content[key] = `<div id="${key}" style="min-height: ${heightDiv}px">${value}</div>`;
     }
     return content;
+}
+
+const JSON_LEVEL_KEYS = ['level', 'lvl', 'severity', 'loglevel'];
+const JSON_TIME_KEYS = ['time', 'timestamp', 'ts', '@timestamp'];
+const JSON_MESSAGE_KEYS = ['msg', 'message'];
+
+function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function levelClass(value) {
+    const level = value.replace(/"/g, '').toLowerCase();
+    if (/^(err|error|fatal|crit|critical|panic|alert|emerg)/.test(level)) { return 'jl-error'; }
+    if (/^warn/.test(level)) { return 'jl-warn'; }
+    if (/^(info|notice)/.test(level)) { return 'jl-info'; }
+    return 'jl-debug';
+}
+
+// Colors a log line that is a JSON object or array, optionally prefixed (e.g. by a kubectl timestamp).
+// Tokens are emitted from the original text, so values such as large numbers are shown unchanged.
+// Returns undefined when the line is not JSON.
+function highlightJsonLine(line) {
+    const start = line.search(/[{[]/);
+    if (start === -1) {
+        return undefined;
+    }
+    const prefix = line.slice(0, start);
+    const body = line.slice(start).replace(/\s+$/, '');
+    if (prefix.trim() && !/^[\w:.+\-\s]*$/.test(prefix)) {
+        return undefined;
+    }
+    try {
+        JSON.parse(body);
+    } catch {
+        return undefined;
+    }
+
+    let out = prefix ? `<span class="jt">${escapeHtml(prefix)}</span>` : '';
+    let depth = 0;
+    let lastKey;
+    let i = 0;
+    while (i < body.length) {
+        const ch = body[i];
+        if (ch === '{' || ch === '[') {
+            out += `<span class="jd${depth % 6}">${ch}</span>`;
+            depth += 1;
+            i += 1;
+        } else if (ch === '}' || ch === ']') {
+            depth -= 1;
+            out += `<span class="jd${depth % 6}">${ch}</span>`;
+            i += 1;
+        } else if (ch === '"') {
+            let j = i + 1;
+            while (j < body.length && body[j] !== '"') {
+                j += body[j] === '\\' ? 2 : 1;
+            }
+            const token = body.slice(i, j + 1);
+            let k = j + 1;
+            while (k < body.length && /\s/.test(body[k])) { k += 1; }
+            if (body[k] === ':') {
+                lastKey = token.slice(1, -1).toLowerCase();
+                out += `<span class="jd${(depth - 1) % 6}">${escapeHtml(token)}</span>`;
+            } else {
+                let cls = 'js';
+                if (JSON_LEVEL_KEYS.includes(lastKey)) {
+                    cls = levelClass(token);
+                } else if (JSON_TIME_KEYS.includes(lastKey)) {
+                    cls = 'jt';
+                } else if (JSON_MESSAGE_KEYS.includes(lastKey)) {
+                    cls = 'jm';
+                }
+                out += `<span class="${cls}">${escapeHtml(token)}</span>`;
+                lastKey = undefined;
+            }
+            i = j + 1;
+        } else if (ch === ':' || ch === ',') {
+            out += `<span class="jp">${ch}</span> `;
+            i += 1;
+            while (i < body.length && body[i] === ' ') { i += 1; }
+            if (ch === ',') { lastKey = undefined; }
+        } else if (/\s/.test(ch)) {
+            out += ch;
+            i += 1;
+        } else {
+            const match = /^(-?\d[\d.eE+-]*|true|false|null)/.exec(body.slice(i));
+            const token = match ? match[0] : ch;
+            const cls = token === 'null' ? 'jz' : (token === 'true' || token === 'false') ? 'jb' : 'jn';
+            out += `<span class="${cls}">${escapeHtml(token)}</span>`;
+            i += token.length;
+            lastKey = undefined;
+        }
+    }
+    return out;
 }
 
 function highlightWords(row) {

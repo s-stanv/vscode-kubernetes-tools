@@ -71,8 +71,27 @@
         }
         #content {
             color: var(--vscode-foreground);
-            font-family: var(--vscode-font-family);
+            font-family: var(--vscode-editor-font-family), monospace;
+            font-size: var(--vscode-editor-font-size);
+            font-weight: var(--vscode-editor-font-weight);
         }
+        .jd0 { color: var(--vscode-editorBracketHighlight-foreground1, #ffd700); }
+        .jd1 { color: var(--vscode-editorBracketHighlight-foreground2, #da70d6); }
+        .jd2 { color: var(--vscode-editorBracketHighlight-foreground3, #179fff); }
+        .jd3 { color: var(--vscode-editorBracketHighlight-foreground4, #ffd700); }
+        .jd4 { color: var(--vscode-editorBracketHighlight-foreground5, #da70d6); }
+        .jd5 { color: var(--vscode-editorBracketHighlight-foreground6, #179fff); }
+        .js { color: var(--vscode-debugTokenExpression-string, #ce9178); }
+        .jn { color: var(--vscode-debugTokenExpression-number, #b5cea8); }
+        .jb { color: var(--vscode-debugTokenExpression-boolean, #4e94ce); }
+        .jz { color: var(--vscode-debugTokenExpression-value, #9d9d9d); font-style: italic; }
+        .jp { color: var(--vscode-descriptionForeground); }
+        .jt { color: var(--vscode-descriptionForeground); }
+        .jm { color: var(--vscode-editor-foreground); font-weight: bold; }
+        .jl-error { color: var(--vscode-errorForeground, #f14c4c); font-weight: bold; }
+        .jl-warn { color: var(--vscode-editorWarning-foreground, #cca700); font-weight: bold; }
+        .jl-info { color: var(--vscode-charts-green, #89d185); }
+        .jl-debug { color: var(--vscode-descriptionForeground); }
         .gl {
             color: #b5cea8;
         }
@@ -141,7 +160,7 @@
                                     <span class="tooltiptext">Lines of recent log file to display. Defaults show all log lines.</span>
                                 </div>
                                 <div class="mr-2" style="width: 50px; display: inline-block">
-                                    <vscode-inputbox id="tail-input" type="number" value="-1"></vscode-inputbox>
+                                    <vscode-inputbox id="tail-input" type="number" value="500"></vscode-inputbox>
                                 </div>
                                 <div class="tooltip ml-10 mr-2">Destination:&nbsp;
                                     <span class="tooltiptext">Where to display logs.</span>

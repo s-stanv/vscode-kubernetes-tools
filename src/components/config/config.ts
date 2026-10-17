@@ -371,7 +371,7 @@ export function setMinikubeShowInfo(selectedoption: string): void {
 }
 
 export function isLogViewerFollowEnabled(): boolean {
-    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('follow', false);
+    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('follow', true);
 }
 
 export function setLogViewerFollowEnabled(follow: boolean) {
@@ -395,7 +395,7 @@ export function setLogViewerSince(since: number) {
 }
 
 export function getLogViewerTail(): number {
-    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('tail', -1);
+    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('tail', 500);
 }
 
 export function setLogViewerTail(tail: number) {
@@ -419,5 +419,5 @@ export function setLogViewerWrapEnabled(wrap: boolean) {
 }
 
 export function isLogViewerAutorunEnabled(): boolean {
-    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('autorun', false);
+    return vscode.workspace.getConfiguration('vscode-kubernetes.log-viewer').get('autorun', true);
 }

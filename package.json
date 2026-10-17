@@ -341,7 +341,7 @@
                 },
                 "vscode-kubernetes.log-viewer.follow": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Set to true to follow logs by default in the log viewer."
                 },
                 "vscode-kubernetes.log-viewer.timestamp": {
@@ -357,7 +357,7 @@
                 },
                 "vscode-kubernetes.log-viewer.tail": {
                     "type": "integer",
-                    "default": -1,
+                    "default": 500,
                     "minimum": -1,
                     "description": "The number of recent logs to display by default in the log viewer. Set to -1 for all log lines."
                 },
@@ -377,7 +377,7 @@
                 },
                 "vscode-kubernetes.log-viewer.autorun": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Set to true to automatically begin fetching logs once the log viewer is opened using the default settings."
                 }
             }
